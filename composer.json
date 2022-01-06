@@ -1,0 +1,53 @@
+{
+	"name"         : "busyphp/annotation",
+	"type"         : "library",
+	"description"  : "基于ThinkPHP改进的注解扩展，方便高效的开发项目",
+	"homepage"     : "http://www.harter.cn/?form=BusyPHP&plugin=busyphp/annotation",
+	"keywords"     : [
+		"annotation",
+		"注解"
+	],
+	"authors"      : [
+		{
+			"name"  : "busy^life",
+			"email" : "busy.life@qq.com"
+		}
+	],
+	"license"      : "CC-BY-NC-4.0",
+	"require"      : {
+		"php"                  : ">=7.2.0",
+		"busyphp/busyphp"      : "^6.0",
+		"doctrine/annotations" : "^1.6",
+		"php-di/phpdoc-reader" : "^2.1",
+		"symfony/class-loader" : "~3.2.0"
+	},
+	"require-dev"  : {
+		"symfony/var-dumper" : "^4.3|^5.1"
+	},
+	"autoload"     : {
+		"psr-4" : {
+			"BusyPHP\\annotation\\" : "src"
+		}
+	},
+	"autoload-dev" : {
+		"psr-4" : {
+			"BusyPHP\\annotation\\tests\\" : "tests"
+		}
+	},
+	"config"       : {
+		"preferred-install" : "dist"
+	},
+	"extra"        : {
+		"think"   : {
+			"config" : {
+			}
+		},
+		"busyphp" : {
+			"manager"  : {
+				"name" : "注解扩展"
+			},
+			"services" : [
+			]
+		}
+	}
+}
