@@ -11,7 +11,7 @@ composer require busyphp/annotation
 
 ## 使用
 
-### 属性自动依赖注入 `@BusyPHP\annotation\Inject`
+### 属性依赖注入注解 `@BusyPHP\annotation\Inject`
 
 支持类：
 
