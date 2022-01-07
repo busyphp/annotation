@@ -8,6 +8,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
+use think\Container;
 
 /**
  * 缓存读取器
@@ -52,7 +53,18 @@ class CachedReader implements Reader
     
     
     /**
-     * {@inheritDoc}
+     * 单例模式
+     * @return static
+     */
+    public static function init() : self
+    {
+        return Container::getInstance()->make(Reader::class);
+    }
+    
+    
+    /**
+     * 获取类上的所有注解
+     * @inheritDoc
      * @throws InvalidArgumentException
      */
     public function getClassAnnotations(ReflectionClass $class)
@@ -73,7 +85,8 @@ class CachedReader implements Reader
     
     
     /**
-     * {@inheritDoc}
+     * 获取类上的指定注解
+     * @inheritDoc
      * @throws InvalidArgumentException
      */
     public function getClassAnnotation(ReflectionClass $class, $annotationName)
@@ -89,7 +102,8 @@ class CachedReader implements Reader
     
     
     /**
-     * {@inheritDoc}
+     * 获取类属性的所有注解
+     * @inheritDoc
      * @throws InvalidArgumentException
      */
     public function getPropertyAnnotations(ReflectionProperty $property)
@@ -111,7 +125,8 @@ class CachedReader implements Reader
     
     
     /**
-     * {@inheritDoc}
+     * 获取类属性上的指定注解
+     * @inheritDoc
      * @throws InvalidArgumentException
      */
     public function getPropertyAnnotation(ReflectionProperty $property, $annotationName)
@@ -127,7 +142,8 @@ class CachedReader implements Reader
     
     
     /**
-     * {@inheritDoc}
+     * 获取类方法中的所有注解
+     * @inheritDoc
      * @throws InvalidArgumentException
      */
     public function getMethodAnnotations(ReflectionMethod $method)
@@ -149,7 +165,8 @@ class CachedReader implements Reader
     
     
     /**
-     * {@inheritDoc}
+     * 获取类方法中的指定注解
+     * @inheritDoc
      * @throws InvalidArgumentException
      */
     public function getMethodAnnotation(ReflectionMethod $method, $annotationName)
