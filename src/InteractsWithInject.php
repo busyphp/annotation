@@ -2,72 +2,135 @@
 
 namespace BusyPHP\annotation;
 
-use Doctrine\Common\Annotations\Reader;
+use BusyPHP\App;
+use BusyPHP\Model;
+use BusyPHP\model\ArrayOption;
+use BusyPHP\model\Entity;
+use BusyPHP\model\Field;
+use BusyPHP\model\ObjectOption;
+use PhpDocReader\AnnotationException;
 use PhpDocReader\PhpDocReader;
 use ReflectionObject;
-use think\App;
 
 /**
  * Trait InteractsWithInject
  * @author busy^life <busy.life@qq.com>
  * @copyright (c) 2015--2022 ShanXi Han Tuo Technology Co.,Ltd. All rights reserved.
  * @version $Id: 2022/1/7 2:18 PM InteractsWithInject.php $
- * @property App    $app
- * @property Reader $reader
+ * @property App $app
  */
 trait InteractsWithInject
 {
-    protected $docReader = null;
+    /**
+     * @var PhpDocReader
+     */
+    protected $injectDocReader = null;
     
     
-    protected function getDocReader() : PhpDocReader
+    /**
+     * @return PhpDocReader
+     */
+    protected function getInjectDocReader() : PhpDocReader
     {
-        if (empty($this->docReader)) {
-            $this->docReader = new PhpDocReader();
+        if (empty($this->injectDocReader)) {
+            $this->injectDocReader = new PhpDocReader();
         }
         
-        return $this->docReader;
+        return $this->injectDocReader;
     }
     
     
-    protected function autoInject()
+    /**
+     * @return App
+     */
+    protected function getInjectApp() : App
     {
-        if ($this->app->config->get('annotation.inject.enable', true)) {
-            $this->app->resolving(function($object, $app) {
-                if ($this->isInjectClass(get_class($object))) {
-                    $reader = $this->getDocReader();
-                    
-                    $refObject = new ReflectionObject($object);
-                    
-                    foreach ($refObject->getProperties() as $refProperty) {
-                        if ($refProperty->isDefault() && !$refProperty->isStatic()) {
-                            $annotation = $this->reader->getPropertyAnnotation($refProperty, Inject::class);
-                            if ($annotation) {
-                                if ($annotation->value) {
-                                    $value = $app->make($annotation->value);
-                                } else {
-                                    //获取@var类名
-                                    $propertyClass = $reader->getPropertyClass($refProperty);
-                                    if ($propertyClass) {
-                                        $value = $app->make($propertyClass);
-                                    }
-                                }
-                                
-                                if (!empty($value)) {
-                                    if (!$refProperty->isPublic()) {
-                                        $refProperty->setAccessible(true);
-                                    }
-                                    $refProperty->setValue($object, $value);
-                                }
-                            }
+        if (empty($this->app)) {
+            $this->app = App::getInstance();
+        }
+        
+        return $this->app;
+    }
+    
+    
+    /**
+     * 启动属性注入注解
+     * @return void
+     */
+    protected function bootUpAutoInject()
+    {
+        if ($this->getInjectApp()->config->get('annotation.inject.enable', true)) {
+            $this->getInjectApp()->resolving(function($object) {
+                if (!$this->isInjectClass(get_class($object))) {
+                    return;
+                }
+                
+                $this->executeInject($object);
+            });
+        }
+        
+        \think\Model::maker(function($object) {
+            $this->executeInject($object);
+        });
+        
+        Model::maker(function($object) {
+            $this->executeInject($object);
+        });
+        
+        Field::maker(function($object) {
+            $this->executeInject($object);
+        });
+        
+        Entity::maker(function($object) {
+            $this->executeInject($object);
+        });
+        
+        ArrayOption::maker(function($object) {
+            $this->executeInject($object);
+        });
+        
+        ObjectOption::maker(function($object) {
+            $this->executeInject($object);
+        });
+    }
+    
+    
+    /**
+     * 执行属性注入注解
+     * @param $object
+     * @throws AnnotationException
+     */
+    protected function executeInject($object)
+    {
+        $reader    = $this->getInjectDocReader();
+        $refObject = new ReflectionObject($object);
+        
+        foreach ($refObject->getProperties() as $refProperty) {
+            if ($refProperty->isDefault() && !$refProperty->isStatic()) {
+                $annotation = $this->reader->getPropertyAnnotation($refProperty, Inject::class);
+                if ($annotation) {
+                    if ($annotation->value) {
+                        $value = $this->getInjectApp()->make($annotation->value);
+                    } else {
+                        //获取@var类名
+                        $propertyClass = $reader->getPropertyClass($refProperty);
+                        if ($propertyClass) {
+                            $value = $this->getInjectApp()->make($propertyClass);
                         }
                     }
                     
-                    if ($refObject->hasMethod('__injected')) {
-                        $app->invokeMethod([$object, '__injected']);
+                    if (!empty($value)) {
+                        if (!$refProperty->isPublic()) {
+                            $refProperty->setAccessible(true);
+                        }
+                        $refProperty->setValue($object, $value);
                     }
                 }
-            });
+            }
+        }
+        
+        if ($refObject->hasMethod('__injected')) {
+            $this->getInjectApp()->invokeMethod([$object, '__injected']);
         }
     }
     
@@ -78,7 +141,10 @@ trait InteractsWithInject
      */
     protected function isInjectClass($name) : bool
     {
-        $namespaces = ['app\\'] + $this->app->config->get('annotation.inject.namespaces', []);
+        $namespaces = array_merge([
+            'app\\',
+            'core\\',
+        ], $this->app->config->get('annotation.inject.namespaces', []));
         
         foreach ($namespaces as $namespace) {
             $namespace = rtrim($namespace, '\\') . '\\';

@@ -46,7 +46,7 @@ class Service extends \think\Service
         $this->registerAnnotationRoute();
         
         //自动注入
-        $this->autoInject();
+        $this->bootUpAutoInject();
         
         //模型注解方法提示
         $this->detectModelAnnotations();
