@@ -8,6 +8,7 @@ use BusyPHP\model\ArrayOption;
 use BusyPHP\model\Entity;
 use BusyPHP\model\Field;
 use BusyPHP\model\ObjectOption;
+use Doctrine\Common\Annotations\Reader;
 use PhpDocReader\AnnotationException;
 use PhpDocReader\PhpDocReader;
 use ReflectionObject;
@@ -17,7 +18,8 @@ use ReflectionObject;
  * @author busy^life <busy.life@qq.com>
  * @copyright (c) 2015--2022 ShanXi Han Tuo Technology Co.,Ltd. All rights reserved.
  * @version $Id: 2022/1/7 2:18 PM InteractsWithInject.php $
- * @property App $app
+ * @property App    $app
+ * @property Reader $reader
  */
 trait InteractsWithInject
 {
