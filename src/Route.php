@@ -4,14 +4,15 @@ namespace BusyPHP\annotation;
 
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Enum;
-use Doctrine\Common\Annotations\Annotation\Target;
 use BusyPHP\annotation\route\Rule;
 
 /**
  * 注册路由
- * @package topBusyPHP\annotation
+ * @author busy^life <busy.life@qq.com>
+ * @copyright (c) 2015--2022 ShanXi Han Tuo Technology Co.,Ltd. All rights reserved.
+ * @version $Id: 2022/1/7 2:10 PM Route.php $
  * @Annotation
- * @Target({"METHOD","CLASS"})
+ * @Annotation\Target({"METHOD","CLASS"})
  */
 final class Route extends Rule
 {
@@ -21,5 +22,4 @@ final class Route extends Rule
      * @var string
      */
     public $method = "*";
-
 }
