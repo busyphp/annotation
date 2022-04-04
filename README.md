@@ -23,7 +23,7 @@ composer require busyphp/annotation
 - BusyPHP\model\Entity
 - `app\*` 命名空间下通过 `\think\Container` 管理的类
 - `core\*` 命名空间下通过 `\think\Container` 管理的类
-- `config/annotation.php 中设置 inject.namespaces` 命名空间下通过 `\think\Container` 管理的类
+- `config/busy-annotation.php 中设置 inject.namespaces` 命名空间下通过 `\think\Container` 管理的类
 
 #### 示例
 ```php
@@ -35,7 +35,7 @@ class HomeController {
     /**
      * 通过为属性指定var类型，实现依赖注入
      * 
-     * @var BusyPHP\App 
+     * @var \BusyPHP\App 
      * @BusyPHP\annotation\Inject 
      */
     protected $test;
@@ -48,8 +48,8 @@ class HomeController {
     protected $test1;
 
     public function index() {
-        var_dump($this->test instanceof BusyPHP\App); // true
-        var_dump($this->test1 instanceof BusyPHP\App); // true
+        var_dump($this->test instanceof \BusyPHP\App); // true
+        var_dump($this->test1 instanceof \BusyPHP\App); // true
     }
 }
 ```
