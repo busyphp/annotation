@@ -1,17 +1,18 @@
 <?php
 
-namespace BusyPHP\annotation;
+namespace BusyPHP\annotation\interacts;
 
+use BusyPHP\annotation\route\Group;
+use BusyPHP\annotation\route\Middleware;
+use BusyPHP\annotation\route\Model;
+use BusyPHP\annotation\route\Resource;
+use BusyPHP\annotation\route\Route;
+use BusyPHP\annotation\route\Validate;
 use Doctrine\Common\Annotations\Reader;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use Symfony\Component\ClassLoader\ClassMapGenerator;
-use BusyPHP\annotation\route\Group;
-use BusyPHP\annotation\route\Middleware;
-use BusyPHP\annotation\route\Model;
-use BusyPHP\annotation\route\Resource;
-use BusyPHP\annotation\route\Validate;
 use think\App;
 use think\event\RouteLoaded;
 
@@ -36,11 +37,11 @@ trait InteractsWithRoute
      */
     protected function registerAnnotationRoute()
     {
-        if ($this->app->config->get('annotation.route.enable', true)) {
+        if ($this->app->config->get('busy-annotation.route.enable', true)) {
             $this->app->event->listen(RouteLoaded::class, function() {
                 $this->route = $this->app->route;
                 
-                $dirs = [$this->app->getAppPath() . $this->app->config->get('route.controller_layer')] + $this->app->config->get('annotation.route.controllers', []);
+                $dirs = [$this->app->getAppPath() . $this->app->config->get('route.controller_layer')] + $this->app->config->get('busy-annotation.route.controllers', []);
                 
                 foreach ($dirs as $dir) {
                     if (is_dir($dir)) {

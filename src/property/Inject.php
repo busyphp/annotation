@@ -1,6 +1,6 @@
 <?php
 
-namespace BusyPHP\annotation;
+namespace BusyPHP\annotation\property;
 
 use Doctrine\Common\Annotations\Annotation;
 

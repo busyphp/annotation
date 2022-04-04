@@ -2,6 +2,9 @@
 
 namespace BusyPHP\annotation;
 
+use BusyPHP\annotation\interacts\InteractsWithInject;
+use BusyPHP\annotation\interacts\InteractsWithModel;
+use BusyPHP\annotation\interacts\InteractsWithRoute;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\Reader;
@@ -31,7 +34,7 @@ class Service extends \think\Service
         AnnotationRegistry::registerLoader('class_exists');
         
         $this->app->bind(Reader::class, function(App $app, Config $config, Cache $cache) {
-            $store = $config->get('annotation.store');
+            $store = $config->get('busy-annotation.store');
             
             return new CachedReader(new AnnotationReader(), $cache->store($store), $app->isDebug());
         });
@@ -42,13 +45,13 @@ class Service extends \think\Service
     {
         $this->reader = $reader;
         
-        //注解路由
+        // 注解路由
         $this->registerAnnotationRoute();
         
-        //自动注入
+        // 自动注入
         $this->bootUpAutoInject();
         
-        //模型注解方法提示
+        // 模型注解
         $this->detectModelAnnotations();
     }
 }

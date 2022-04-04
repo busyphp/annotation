@@ -1,10 +1,11 @@
 <?php
 
-namespace BusyPHP\annotation;
+namespace BusyPHP\annotation\interacts;
 
-use Doctrine\Common\Annotations\Annotation;
-use Doctrine\Common\Annotations\Reader;
-use ReflectionClass;
+use BusyPHP\annotation\interfaces\BindInfoInterface;
+use BusyPHP\annotation\interfaces\BindListInterface;
+use BusyPHP\annotation\model\field\BindInfo;
+use BusyPHP\annotation\model\field\BindList;
 use BusyPHP\annotation\model\relation\BelongsTo;
 use BusyPHP\annotation\model\relation\BelongsToMany;
 use BusyPHP\annotation\model\relation\HasMany;
@@ -16,6 +17,12 @@ use BusyPHP\annotation\model\relation\MorphMany;
 use BusyPHP\annotation\model\relation\MorphOne;
 use BusyPHP\annotation\model\relation\MorphTo;
 use BusyPHP\annotation\model\relation\MorphToMany;
+use BusyPHP\helper\ArrayHelper;
+use BusyPHP\helper\StringHelper;
+use BusyPHP\Model as BusyModel;
+use Doctrine\Common\Annotations\Annotation;
+use Doctrine\Common\Annotations\Reader;
+use ReflectionClass;
 use think\App;
 use think\helper\Str;
 use think\ide\ModelGenerator;
@@ -38,7 +45,125 @@ trait InteractsWithModel
     
     protected function detectModelAnnotations()
     {
-        if ($this->app->config->get('annotation.model.enable', true)) {
+        if ($this->app->config->get('busy-annotation.model.enable', true)) {
+            BusyModel::bindParseClassHandle(function(BusyModel $parentModel, string $class, array $list) {
+                $reflectionClass = new ReflectionClass($class);
+                foreach ($reflectionClass->getProperties() as $property) {
+                    $annotations = $this->reader->getPropertyAnnotations($property);
+                    $attr        = $property->getName();
+                    foreach ($annotations as $annotation) {
+                        switch (true) {
+                            case $annotation instanceof BindInfo:  // 一对一
+                            case $annotation instanceof BindList:  // 一对多
+                                $target = $annotation->model ?: $annotation->value;
+                                $model  = new $target;
+                                if (!is_subclass_of($model, BusyModel::class)) {
+                                    break;
+                                }
+                                
+                                $foreignKey = $annotation->foreignKey;
+                                $localKey   = $annotation->localKey;
+                                if (!$annotation->foreignKey) {
+                                    $foreignKey = $model->getTableWithoutPrefix() . '_id';
+                                }
+                                if (!$annotation->localKey) {
+                                    $localKey = $model->getPk();
+                                }
+                                
+                                // 一对一
+                                $values = [];
+                                if ($annotation instanceof BindInfo) {
+                                    foreach ($list as $item) {
+                                        if (!isset($item[$foreignKey])) {
+                                            continue;
+                                        }
+                                        $values[] = $item[$foreignKey];
+                                    }
+                                    
+                                    $result = true;
+                                    if ($model instanceof BindInfoInterface) {
+                                        $result = $model->onBindInfoCondition($parentModel, $list, $foreignKey, $localKey, $annotation->extend);
+                                    }
+                                    if (false !== $result) {
+                                        $model->where($localKey, 'in', $values);
+                                    }
+                                    
+                                    $queryList = $annotation->extend ? $model->selectExtendList() : $model->selectList();
+                                    $queryList = ArrayHelper::listByKey($queryList, $localKey);
+                                    foreach ($list as $i => $item) {
+                                        $item[$attr] = $queryList[$item[$foreignKey] ?? null] ?? null;
+                                        $list[$i]    = $item;
+                                    }
+                                }
+                                
+                                //
+                                // 一对多
+                                else {
+                                    $splitForeignKey = '@@split#' . StringHelper::camel($foreignKey);
+                                    foreach ($list as $item) {
+                                        if (!isset($item[$foreignKey])) {
+                                            continue;
+                                        }
+                                        
+                                        $value = $item[$foreignKey];
+                                        // 需要切割
+                                        if ($annotation->split) {
+                                            if (!is_array($value)) {
+                                                $value = explode($annotation->split, trim((string) $value, $annotation->split));
+                                            }
+                                            $item[$splitForeignKey] = $value;
+                                            $values                 = array_merge($values, $value);
+                                        } else {
+                                            $values[] = $value;
+                                        }
+                                    }
+                                    
+                                    $result = true;
+                                    if ($model instanceof BindListInterface) {
+                                        $result = $model->onBindListCondition($parentModel, $list, $foreignKey, $splitForeignKey, $localKey, $annotation->extend);
+                                    }
+                                    if ($result !== false) {
+                                        $model->where($localKey, 'in', $values);
+                                    }
+                                    
+                                    $queryList = [];
+                                    foreach ($annotation->extend ? $model->selectExtendList() : $model->selectList() as $item) {
+                                        if ($annotation->split) {
+                                            $queryList[$item[$localKey]] = $item;
+                                        } else {
+                                            $queryList[$item[$localKey]][] = $item;
+                                        }
+                                    }
+                                    foreach ($list as $i => $item) {
+                                        if (isset($item[$splitForeignKey])) {
+                                            $attrList = [];
+                                            foreach ($item[$splitForeignKey] as $foreignValue) {
+                                                if (isset($queryList[$foreignValue])) {
+                                                    $attrList[] = $queryList[$foreignValue];
+                                                }
+                                            }
+                                            if (is_object($item)) {
+                                                unset($item->{$splitForeignKey});
+                                            } else {
+                                                unset($item[$splitForeignKey]);
+                                            }
+                                            $item[$attr] = $attrList;
+                                        } else {
+                                            $item[$attr] = $queryList[$item[$foreignKey]] ?? [];
+                                        }
+                                        
+                                        $list[$i] = $item;
+                                    }
+                                }
+                            break;
+                        }
+                    }
+                }
+                
+                return $list;
+            });
+            
+            
             Model::maker(function(Model $model) {
                 $className = get_class($model);
                 if (!isset($this->detected[$className])) {
@@ -162,6 +287,7 @@ trait InteractsWithModel
                 }
             });
             
+            // ide-helper
             $this->app->event->listen(ModelGenerator::class, function(ModelGenerator $generator) {
                 /** @var Annotation[] $annotations */
                 $annotations = $this->reader->getClassAnnotations($generator->getReflection());

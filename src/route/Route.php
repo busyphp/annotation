@@ -1,10 +1,9 @@
 <?php
 
-namespace BusyPHP\annotation;
+namespace BusyPHP\annotation\route;
 
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Enum;
-use BusyPHP\annotation\route\Rule;
 
 /**
  * 注册路由

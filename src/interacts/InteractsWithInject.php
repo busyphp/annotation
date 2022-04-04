@@ -1,7 +1,8 @@
 <?php
 
-namespace BusyPHP\annotation;
+namespace BusyPHP\annotation\interacts;
 
+use BusyPHP\annotation\property\Inject;
 use BusyPHP\App;
 use BusyPHP\Model;
 use BusyPHP\model\ArrayOption;
@@ -61,7 +62,7 @@ trait InteractsWithInject
      */
     protected function bootUpAutoInject()
     {
-        if ($this->getInjectApp()->config->get('annotation.inject.enable', true)) {
+        if ($this->getInjectApp()->config->get('busy-annotation.inject.enable', true)) {
             $this->getInjectApp()->resolving(function($object) {
                 if (!$this->isInjectClass(get_class($object))) {
                     return;
@@ -146,7 +147,7 @@ trait InteractsWithInject
         $namespaces = array_merge([
             'app\\',
             'core\\',
-        ], $this->app->config->get('annotation.inject.namespaces', []));
+        ], $this->app->config->get('busy-annotation.inject.namespaces', []));
         
         foreach ($namespaces as $namespace) {
             $namespace = rtrim($namespace, '\\') . '\\';
