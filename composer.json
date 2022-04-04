@@ -15,7 +15,7 @@
 	],
 	"license"      : "CC-BY-NC-4.0",
 	"require"      : {
-		"busyphp/busyphp"           : "^6.0",
+		"busyphp/busyphp"           : "^6.0.6",
 		"doctrine/annotations"      : "^1.6",
 		"php-di/phpdoc-reader"      : "^2.1",
 		"symfony/class-loader"      : "~3.2.0",
